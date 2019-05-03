@@ -1,0 +1,25 @@
+- name: Creating the web layer
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: download and install httpd
+      yum:
+        name: httpd
+        state: latest
+    - name: Starting the webserver
+      service:
+         name: httpd
+         state: started
+   ## - name: downloading the mod_jk
+   ##   get_url: 
+   ##     url: http://mirrors.estointernet.in/apache/tomcat/tomcat-connectors/jk/tomcat-connectors-1.2.46-src.tar.gz
+   ##     dest: /opt
+    ##- name: Extracting the mod_jk
+    ##  unarchive:
+       ## src: /opt/tomcat-connectors-1.2.46-src.tar.gz
+       ## dest: /opt   
+    - name: Extracting the mod_jk
+      unarchive:
+          src: http://mirrors.estointernet.in/apache/tomcat/tomcat-connectors/jk/tomcat-connectors-1.2.46-src.tar.gz
+          dest: /opt  
+          remote_src: yes 

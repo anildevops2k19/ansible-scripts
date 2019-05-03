@@ -1,0 +1,11 @@
+- name: Demo on variables
+  hosts: localhost
+  vars:
+    NAME: Merisha
+    
+  tasks:
+    - name: Printing the variables
+      vars:
+        NAME: Anubkira
+      debug:
+        msg: "Hello {{NAME}}"

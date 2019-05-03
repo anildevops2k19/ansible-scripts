@@ -1,0 +1,6 @@
+- name: demo on debug module
+  hosts: localhost
+  tasks:
+    - name : printing the message
+      debug:
+        msg: "Hello Anil"

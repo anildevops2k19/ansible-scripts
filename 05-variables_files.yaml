@@ -1,0 +1,8 @@
+- name: Demo on variablesfrom files
+  hosts: localhost
+  vars_files:
+    - credentials.yaml  
+  tasks:
+    - name: Printing the variables
+      debug:
+        msg: "Ipaddress={{ip}},username={{user}},password={{pass}}"

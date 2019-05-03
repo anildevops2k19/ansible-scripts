@@ -1,0 +1,6 @@
+- name: Demo on variables
+  hosts: localhost
+  tasks:
+    - name: Printing the variables
+      debug:
+        msg: "Hostname={{host}},username={{user}}"
