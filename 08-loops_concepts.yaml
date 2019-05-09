@@ -1,0 +1,16 @@
+- name: printing multiple names
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: printing the name
+      debug:
+        msg: "{{item}}"
+      loop:
+        - Anil
+        - Anubkira
+        - lucky
+        - Naren
+        - Kutti
+        - chicha
+        - Anil
+    

@@ -1,11 +1,30 @@
 - name: Creating the web layer
   hosts: localhost
   become: yes
+  vars:
+    Modjk_url: https://www-us.apache.org/dist/tomcat/tomcat-connectors/jk/tomcat-connectors-1.2.46-src.tar.gz
   tasks:
-    - name: download and install httpd
+    - name: Defining the Modjk_src direct variable
+      shell: echo "{{Modjk_url}}" | awk -F / '{print $NF}' | sed -e 's/.tar.gz//'
+      register: output
+    - name: printing the output
+      debug:
+        msg: "{{output}}"
+    - name: Setting up the Modjk_src
+      set_fact:
+        Modjk_src: "{{output.stdout}}"
+    - name: print the acutal output
+      debug:
+        msg: "{{Modjk_src}}"
+    - name: Download and Installing the packages
       yum:
-        name: httpd
+        name: "{{item}}"
         state: latest
+      loop:
+        - httpd
+        - gcc
+        - httpd-devel
+        - java
     - name: Starting the webserver
       service:
          name: httpd
@@ -20,6 +39,82 @@
        ## dest: /opt   
     - name: Extracting the mod_jk
       unarchive:
-          src: http://mirrors.estointernet.in/apache/tomcat/tomcat-connectors/jk/tomcat-connectors-1.2.46-src.tar.gz
+          src: "{{Modjk_url}}"
           dest: /opt  
-          remote_src: yes 
+          remote_src: yes
+    - name: statistics of mod_jk.so
+      stat:
+        path: /etc/httpd/modules/mod_jk.so
+      register: out
+
+    - name: mod_jk.so is existing
+      debug:
+        msg: " mod_jk.so is already  exists "
+      when: out.stat.exists == true
+
+    - name: Configuring the mod_jk
+      shell: "{{item}}"
+      args:
+        chdir: /opt/{{Modjk_src}}/native
+      loop:
+        - ./configure --with-apxs=/bin/apxs
+        - make
+        - make install
+      when: out.stat.exists == false
+
+    - name: Creating the modjk.conf
+      blockinfile:
+         path: /etc/httpd/conf.d/modjk.conf
+         block: |
+              LoadModule jk_module modules/mod_jk.so
+              JkWorkersFile conf.d/workers.properties
+              JkLogFile logs/mod_jk.log
+              JkLogLevel info
+              JkLogStampFormat "[%a %b %d %H:%M:%S %Y]"
+              JkOptions +ForwardKeySize +ForwardURICompat -ForwardDirectories
+              JkRequestLogFormat "%w %V %T"
+              JkMount /student tomcatA
+              JkMount /student/* tomcatA
+         create: yes
+    - name: Creating the workers.properties
+      blockinfile:
+         path: /etc/httpd/conf.d/workers.properties
+         block: |
+              ### Define workers
+              worker.list=tomcatA
+              ### Set properties
+              worker.tomcatA.type=ajp13
+              worker.tomcatA.host=localhost
+              worker.tomcatA.port=8009
+         create: yes
+    - name: Restarting the httpd service
+      service:
+         name: httpd
+         state: restarted
+- name: Creating the application layer
+  hosts: localhost
+  tasks:
+    - name: Downloading the tomcat application
+      unarchive:
+          src: http://mirrors.estointernet.in/apache/tomcat/tomcat-9/v9.0.19/bin/apache-tomcat-9.0.19.tar.gz
+          dest: /opt  
+          remote_src: yes
+    - name: creating my studentwar file
+      # args:
+      #   chdir: /opt/apache-tomcat-9.0.19/webapps
+      get_url: 
+        url: https://github.com/devops2k18/DevOpsDecember/raw/master/APPSTACK/student.war
+        dest: /opt/apache-tomcat-9.0.19/webapps
+      # remote_src: yes
+    - name: Downloading my mysql connector file
+      # args:
+      #   chdir: /opt/apache-tomcat-9.0.19/webapps
+      get_url: 
+        url: https://github.com/devops2k18/DevOpsDecember/raw/master/APPSTACK/mysql-connector-java-5.1.40.jar
+        dest: /opt/apache-tomcat-9.0.19/lib
+      # remote_src: yes
+    - name: Configuring the mod_jk
+      shell: sh startup.sh
+      args:
+        chdir: /opt/apache-tomcat-9.0.19/bin
+      

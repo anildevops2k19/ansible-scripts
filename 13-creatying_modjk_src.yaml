@@ -1,0 +1,18 @@
+- name: Creating the web layer
+  hosts: localhost
+  become: yes
+  vars:
+    Modjk_url: https://www-us.apache.org/dist/tomcat/tomcat-connectors/jk/tomcat-connectors-1.2.46-src.tar.gz
+  tasks:
+    - name: Defining the Modjk_src direct variable
+      shell: echo "{{Modjk_url}}" | awk -F / '{print $NF}' | sed -e 's/.tar.gz//'
+      register: output
+    - name: printing the output
+      debug:
+        msg: "{{output}}"
+    - name: Setting up the Modjk_src
+      set_fact:
+        Modjk_src: "{{output.stdout}}"
+    - name: print the acutal output
+      debug:
+        msg: "{{Modjk_src}}"

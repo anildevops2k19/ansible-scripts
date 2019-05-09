@@ -1,0 +1,12 @@
+- name: Demo on Installing multiple packages
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Installing the packages
+      yum:
+        name: "{{item}}"
+        state: latest
+      loop:
+        - httpd
+        - gcc
+        - httpd-devel

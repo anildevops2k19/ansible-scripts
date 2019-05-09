@@ -1,0 +1,15 @@
+- name: Registering the variable
+  hosts: localhost
+  tasks:
+  - name: Registering in to variable
+    shell: hostname -i
+    register: ID
+  - name : print the output
+    debug:
+      msg: "{{ID}}"
+  - name: creating the actual output in to a variable
+    set_fact:
+      out: "{{ID.stdout}}"
+  - name: printing the final output
+    debug:
+      msg: "{{out}}"

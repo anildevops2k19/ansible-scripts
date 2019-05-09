@@ -1,0 +1,17 @@
+- name: checking the file exits or not
+  hosts: localhost
+  tasks:
+    - name: get the statistics of the file
+      stat:
+        path: /home/devopsuser/kutti
+      register: st
+    - name: printing the actual output
+      debug:
+        msg: "{{st}}"
+    - name: get the actual output of the file
+      set_fact:
+        file_exists: "{{st.stat.exists}}"
+    - name: printing the actual output
+      debug:
+        msg: "{{file_exists}}"
+            
