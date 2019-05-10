@@ -1,6 +1,8 @@
 - name: Creating the web layer
   hosts: localhost
   become: yes
+  tags:
+    - WEB
   vars:
     Modjk_url: https://www-us.apache.org/dist/tomcat/tomcat-connectors/jk/tomcat-connectors-1.2.46-src.tar.gz
   tasks:
@@ -93,6 +95,8 @@
          state: restarted
 - name: Creating the application layer
   hosts: localhost
+  tags:
+    - APP
   tasks:
     - name: Downloading the tomcat application
       unarchive:
@@ -113,8 +117,47 @@
         url: https://github.com/devops2k18/DevOpsDecember/raw/master/APPSTACK/mysql-connector-java-5.1.40.jar
         dest: /opt/apache-tomcat-9.0.19/lib
       # remote_src: yes
-    - name: Configuring the mod_jk
+    - name: Creating the modjk.conf
+      blockinfile:
+         path: "/opt/apache-tomcat-9.0.19/conf/context.xml"
+         block: 
+           <Resource name="jdbc/TestDB" auth="Container" type="javax.sql.DataSource" maxTotal="100" maxIdle="30" maxWaitMillis="10000" username="student" password="student@1" driverClassName="com.mysql.jdbc.Driver" url="jdbc:mysql://localhost:3306/studentapp"/>
+         insertbefore: "</Context>"
+    - name: shutdown the application service
+      shell: sh shutdown.sh
+      args:
+        chdir: /opt/apache-tomcat-9.0.19/bin
+    - name: startup the application service
       shell: sh startup.sh
       args:
         chdir: /opt/apache-tomcat-9.0.19/bin
-      
+- name: Creating the DB
+  hosts: localhost
+  become: yes
+  tags:
+    - DB
+  tasks:
+    - name: Download and Installing the mariadb
+      yum:
+        name: "{{item}}"
+        state: latest
+      loop:
+        - mariadb
+        - mariadb-server
+        - MySQL-python
+
+    - name: Starting the webserver
+      service:
+         name: mariadb
+         state: started  
+
+    - name: copying the mysql file
+      copy:
+        src: /home/devopsuser/anil/student.sql
+        dest: /opt
+
+    - name: crating database
+      mysql_db:
+        name: all
+        state: import
+        target: /opt/student.sql

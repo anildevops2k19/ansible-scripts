@@ -1,0 +1,25 @@
+- name: play1
+  hosts: localhost
+  tags:
+    - Play1
+  tasks:
+    - name: From play1 and task1
+      tags:
+        - task1
+      debug:
+        msg: "Hai this is from play1 and task1"
+    - name: From play1 and task2
+      debug:
+        msg: "Hai this is from play1 and task2"    
+
+- name: play2
+  hosts: localhost
+  tags:
+    - Play2
+  tasks:
+    - name: From play2 and task1
+      debug:
+        msg: "Hai this is from play2 and task1"
+    - name: From play1 and task2
+      debug:
+        msg: "Hai this is from play2 and task2"    
